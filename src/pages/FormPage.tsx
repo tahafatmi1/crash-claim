@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Shield } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -222,6 +222,28 @@ const FormPage: React.FC = () => {
             Please fill out all required fields accurately
           </p>
         </div>
+
+        {/* IP Address Collection Notice */}
+        <Card className="mb-6 border-primary/20 bg-accent/50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">Secure Form Verification</h3>
+                <p className="text-sm text-muted-foreground">
+                  For security and fraud prevention purposes, your IP address will be automatically collected when you submit this form. 
+                  This information is used solely for verification and to ensure the authenticity of your claim submission. 
+                  Your IP address is protected in accordance with our Privacy Policy.
+                </p>
+                {trustedFormCertUrl && (
+                  <p className="text-xs text-primary mt-2 font-medium">
+                    ✓ Trusted Form verification active
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -474,12 +496,6 @@ const FormPage: React.FC = () => {
                   Cancel
                 </Button>
               </div>
-
-              {trustedFormCertUrl && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Your submission is secured and your IP address is being collected for verification purposes.
-                </p>
-              )}
             </form>
           </CardContent>
         </Card>
