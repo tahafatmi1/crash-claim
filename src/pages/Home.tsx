@@ -157,13 +157,29 @@ const Home: React.FC = () => {
                     <Label>Date of Incident</Label>
                     <Input type="date" disabled />
                   </div>
-                  <div className="space-y-2 xl:col-span-2">
-                    <Label>Incident Location</Label>
-                    <Input placeholder="Street address, city, state" disabled />
+                  <div className="space-y-2">
+                    <Label>Accident Severity</Label>
+                    <Input placeholder="Major / Moderate / Minor" disabled />
                   </div>
-                  <div className="space-y-2 xl:col-span-2">
-                    <Label>Vehicle Information</Label>
-                    <Input placeholder="Make, model, year, license plate" disabled />
+                  <div className="space-y-2">
+                    <Label>Last Medical Treatment</Label>
+                    <Input placeholder="Today / This Week / This Month..." disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Was Accident Your Fault</Label>
+                    <Input placeholder="Yes / No / Not Sure" disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Accepted Settlement</Label>
+                    <Input placeholder="Yes / No" disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Working With Attorney</Label>
+                    <Input placeholder="Yes / No" disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Location (State)</Label>
+                    <Input placeholder="Select your state" disabled />
                   </div>
                 </div>
                 <div className="pt-4 border-t">

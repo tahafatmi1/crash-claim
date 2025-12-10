@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2, Shield } from 'lucide-react';
 
@@ -16,46 +16,64 @@ declare global {
   }
 }
 
+interface FormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfIncident: string;
+  accidentSeverity: string;
+  lastMedicalTreatment: string;
+  wasYourFault: string;
+  acceptedSettlement: string;
+  workingWithAttorney: string;
+  location: string;
+}
+
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 
+  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 
+  'Wisconsin', 'Wyoming'
+];
+
 const FormPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [trustedFormCertUrl, setTrustedFormCertUrl] = useState('');
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
     phone: '',
     dateOfIncident: '',
-    incidentLocation: '',
-    vehicleMake: '',
-    vehicleModel: '',
-    vehicleYear: '',
-    licensePlate: '',
-    description: '',
-    estimatedDamage: '',
-    insuranceCompany: '',
-    policyNumber: '',
+    accidentSeverity: '',
+    lastMedicalTreatment: '',
+    wasYourFault: '',
+    acceptedSettlement: '',
+    workingWithAttorney: '',
+    location: '',
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<FormData>>({});
 
   useEffect(() => {
     // Load Trusted Form script
     const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
     script.src = 'https://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&ping_field=xxTrustedFormPingUrl&l=' + new Date().getTime() + Math.random();
+    script.async = true;
     document.head.appendChild(script);
 
-    // Check for cert URL periodically
+    // Check for cert URL
     const interval = setInterval(() => {
       if (window.xxTrustedForm?.certUrl) {
         setTrustedFormCertUrl(window.xxTrustedForm.certUrl);
         clearInterval(interval);
       }
-    }, 500);
+    }, 100);
 
     return () => {
       clearInterval(interval);
@@ -65,83 +83,89 @@ const FormPage: React.FC = () => {
     };
   }, []);
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormData]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
 
+  const handleSelectChange = (name: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Partial<FormData> = {};
+
+    // Full Name validation
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
+    } else if (formData.fullName.trim().length < 2) {
+      newErrors.fullName = 'Full name must be at least 2 characters';
     }
 
+    // Email validation
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    // Phone validation
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(formData.phone.replace(/\s/g, ''))) {
+    } else if (!/^[\d\s\-\(\)\+]+$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
 
+    // Date of Incident validation
     if (!formData.dateOfIncident) {
       newErrors.dateOfIncident = 'Date of incident is required';
     } else {
       const incidentDate = new Date(formData.dateOfIncident);
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       if (incidentDate > today) {
         newErrors.dateOfIncident = 'Date cannot be in the future';
       }
     }
 
-    if (!formData.incidentLocation.trim()) {
-      newErrors.incidentLocation = 'Incident location is required';
+    // Accident Severity validation
+    if (!formData.accidentSeverity) {
+      newErrors.accidentSeverity = 'Please select accident severity';
     }
 
-    if (!formData.vehicleMake.trim()) {
-      newErrors.vehicleMake = 'Vehicle make is required';
+    // Last Medical Treatment validation
+    if (!formData.lastMedicalTreatment) {
+      newErrors.lastMedicalTreatment = 'Please select when you last received treatment';
     }
 
-    if (!formData.vehicleModel.trim()) {
-      newErrors.vehicleModel = 'Vehicle model is required';
+    // Was Your Fault validation
+    if (!formData.wasYourFault) {
+      newErrors.wasYourFault = 'Please indicate if the accident was your fault';
     }
 
-    if (!formData.vehicleYear.trim()) {
-      newErrors.vehicleYear = 'Vehicle year is required';
-    } else if (!/^\d{4}$/.test(formData.vehicleYear)) {
-      newErrors.vehicleYear = 'Please enter a valid 4-digit year';
-    } else {
-      const year = parseInt(formData.vehicleYear);
-      const currentYear = new Date().getFullYear();
-      if (year < 1900 || year > currentYear + 1) {
-        newErrors.vehicleYear = `Year must be between 1900 and ${currentYear + 1}`;
-      }
+    // Accepted Settlement validation
+    if (!formData.acceptedSettlement) {
+      newErrors.acceptedSettlement = 'Please indicate if you accepted a settlement';
     }
 
-    if (!formData.licensePlate.trim()) {
-      newErrors.licensePlate = 'License plate is required';
+    // Working With Attorney validation
+    if (!formData.workingWithAttorney) {
+      newErrors.workingWithAttorney = 'Please indicate if you are working with an attorney';
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'Incident description is required';
-    } else if (formData.description.trim().length < 20) {
-      newErrors.description = 'Please provide at least 20 characters';
-    }
-
-    if (formData.estimatedDamage && !/^\d+(\.\d{1,2})?$/.test(formData.estimatedDamage)) {
-      newErrors.estimatedDamage = 'Please enter a valid amount';
+    // Location validation
+    if (!formData.location) {
+      newErrors.location = 'Please select your location';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,7 +174,7 @@ const FormPage: React.FC = () => {
     if (!validateForm()) {
       toast({
         title: 'Validation Error',
-        description: 'Please correct the errors in the form',
+        description: 'Please fill in all required fields correctly.',
         variant: 'destructive',
       });
       return;
@@ -159,28 +183,23 @@ const FormPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission with IP collection via Trusted Form
+      // Simulate form submission
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // In a real implementation, you would send the form data along with trustedFormCertUrl
-      // to your backend API endpoint
-      console.log('Form Data:', formData);
-      console.log('Trusted Form Cert URL:', trustedFormCertUrl);
+      console.log('Form submitted:', {
+        ...formData,
+        trustedFormCertUrl,
+      });
 
       setIsSuccess(true);
       toast({
-        title: 'Claim Submitted Successfully!',
-        description: 'We have received your claim and will contact you soon.',
+        title: 'Success!',
+        description: 'Your claim has been submitted successfully.',
       });
-
-      // Redirect to home after 3 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
     } catch (error) {
       toast({
-        title: 'Submission Error',
-        description: 'There was an error submitting your claim. Please try again.',
+        title: 'Error',
+        description: 'Failed to submit claim. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -192,19 +211,22 @@ const FormPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
         <Card className="max-w-md w-full">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-10 h-10 text-primary" />
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <CheckCircle2 className="w-16 h-16 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Claim Submitted!</h2>
+              <p className="text-muted-foreground">
+                Thank you for submitting your crash claim. We have received your information and will review it shortly.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You will receive a confirmation email at <strong>{formData.email}</strong>
+              </p>
+              <Button onClick={() => navigate('/')} className="w-full">
+                Return to Home
+              </Button>
             </div>
-            <CardTitle className="text-2xl">Claim Submitted!</CardTitle>
-            <CardDescription>
-              Thank you for submitting your claim. We will review your information and contact you within 24-48 hours.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Redirecting to home page...
-            </p>
           </CardContent>
         </Card>
       </div>
@@ -260,15 +282,18 @@ const FormPage: React.FC = () => {
               {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Personal Information</h3>
+                
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {/* Full Name */}
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name *</Label>
                     <Input
                       id="fullName"
                       name="fullName"
-                      value={formData.fullName}
-                      onChange={handleChange}
+                      type="text"
                       placeholder="John Doe"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
                       className={errors.fullName ? 'border-destructive' : ''}
                     />
                     {errors.fullName && (
@@ -276,15 +301,16 @@ const FormPage: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Email Address */}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address *</Label>
                     <Input
                       id="email"
                       name="email"
                       type="email"
+                      placeholder="john.doe@example.com"
                       value={formData.email}
-                      onChange={handleChange}
-                      placeholder="john@example.com"
+                      onChange={handleInputChange}
                       className={errors.email ? 'border-destructive' : ''}
                     />
                     {errors.email && (
@@ -292,15 +318,16 @@ const FormPage: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Phone Number */}
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input
                       id="phone"
                       name="phone"
                       type="tel"
-                      value={formData.phone}
-                      onChange={handleChange}
                       placeholder="(555) 123-4567"
+                      value={formData.phone}
+                      onChange={handleInputChange}
                       className={errors.phone ? 'border-destructive' : ''}
                     />
                     {errors.phone && (
@@ -308,6 +335,7 @@ const FormPage: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Date of Incident */}
                   <div className="space-y-2">
                     <Label htmlFor="dateOfIncident">Date of Incident *</Label>
                     <Input
@@ -315,7 +343,8 @@ const FormPage: React.FC = () => {
                       name="dateOfIncident"
                       type="date"
                       value={formData.dateOfIncident}
-                      onChange={handleChange}
+                      onChange={handleInputChange}
+                      max={new Date().toISOString().split('T')[0]}
                       className={errors.dateOfIncident ? 'border-destructive' : ''}
                     />
                     {errors.dateOfIncident && (
@@ -325,145 +354,137 @@ const FormPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Incident Details */}
+              {/* Accident Details */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Incident Details</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="incidentLocation">Incident Location *</Label>
-                  <Input
-                    id="incidentLocation"
-                    name="incidentLocation"
-                    value={formData.incidentLocation}
-                    onChange={handleChange}
-                    placeholder="Street address, city, state, ZIP"
-                    className={errors.incidentLocation ? 'border-destructive' : ''}
-                  />
-                  {errors.incidentLocation && (
-                    <p className="text-sm text-destructive">{errors.incidentLocation}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Incident Description *</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Please describe what happened in detail..."
-                    rows={5}
-                    className={errors.description ? 'border-destructive' : ''}
-                  />
-                  {errors.description && (
-                    <p className="text-sm text-destructive">{errors.description}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Vehicle Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Vehicle Information</h3>
+                <h3 className="text-lg font-semibold">Accident Details</h3>
+                
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {/* Accident Severity */}
                   <div className="space-y-2">
-                    <Label htmlFor="vehicleMake">Vehicle Make *</Label>
-                    <Input
-                      id="vehicleMake"
-                      name="vehicleMake"
-                      value={formData.vehicleMake}
-                      onChange={handleChange}
-                      placeholder="e.g., Toyota"
-                      className={errors.vehicleMake ? 'border-destructive' : ''}
-                    />
-                    {errors.vehicleMake && (
-                      <p className="text-sm text-destructive">{errors.vehicleMake}</p>
+                    <Label htmlFor="accidentSeverity">Please select the severity of your accident *</Label>
+                    <Select
+                      value={formData.accidentSeverity}
+                      onValueChange={(value) => handleSelectChange('accidentSeverity', value)}
+                    >
+                      <SelectTrigger className={errors.accidentSeverity ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select severity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="major">Major</SelectItem>
+                        <SelectItem value="moderate">Moderate</SelectItem>
+                        <SelectItem value="minor">Minor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.accidentSeverity && (
+                      <p className="text-sm text-destructive">{errors.accidentSeverity}</p>
                     )}
                   </div>
 
+                  {/* Last Medical Treatment */}
                   <div className="space-y-2">
-                    <Label htmlFor="vehicleModel">Vehicle Model *</Label>
-                    <Input
-                      id="vehicleModel"
-                      name="vehicleModel"
-                      value={formData.vehicleModel}
-                      onChange={handleChange}
-                      placeholder="e.g., Camry"
-                      className={errors.vehicleModel ? 'border-destructive' : ''}
-                    />
-                    {errors.vehicleModel && (
-                      <p className="text-sm text-destructive">{errors.vehicleModel}</p>
+                    <Label htmlFor="lastMedicalTreatment">When was the last time you received medical treatment *</Label>
+                    <p className="text-xs text-muted-foreground">(Ambulance, Hospital, ER, Chiropractor, Doctor, etc)</p>
+                    <Select
+                      value={formData.lastMedicalTreatment}
+                      onValueChange={(value) => handleSelectChange('lastMedicalTreatment', value)}
+                    >
+                      <SelectTrigger className={errors.lastMedicalTreatment ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select timeframe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="this_week">This Week</SelectItem>
+                        <SelectItem value="this_month">This Month</SelectItem>
+                        <SelectItem value="more_than_month">More than a Month Ago</SelectItem>
+                        <SelectItem value="never">Never Received Treatment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.lastMedicalTreatment && (
+                      <p className="text-sm text-destructive">{errors.lastMedicalTreatment}</p>
                     )}
                   </div>
 
+                  {/* Was Your Fault */}
                   <div className="space-y-2">
-                    <Label htmlFor="vehicleYear">Vehicle Year *</Label>
-                    <Input
-                      id="vehicleYear"
-                      name="vehicleYear"
-                      value={formData.vehicleYear}
-                      onChange={handleChange}
-                      placeholder="e.g., 2020"
-                      className={errors.vehicleYear ? 'border-destructive' : ''}
-                    />
-                    {errors.vehicleYear && (
-                      <p className="text-sm text-destructive">{errors.vehicleYear}</p>
+                    <Label htmlFor="wasYourFault">Was the accident your fault *</Label>
+                    <Select
+                      value={formData.wasYourFault}
+                      onValueChange={(value) => handleSelectChange('wasYourFault', value)}
+                    >
+                      <SelectTrigger className={errors.wasYourFault ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select answer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="not_sure">Not Sure</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.wasYourFault && (
+                      <p className="text-sm text-destructive">{errors.wasYourFault}</p>
                     )}
                   </div>
 
+                  {/* Accepted Settlement */}
                   <div className="space-y-2">
-                    <Label htmlFor="licensePlate">License Plate *</Label>
-                    <Input
-                      id="licensePlate"
-                      name="licensePlate"
-                      value={formData.licensePlate}
-                      onChange={handleChange}
-                      placeholder="ABC-1234"
-                      className={errors.licensePlate ? 'border-destructive' : ''}
-                    />
-                    {errors.licensePlate && (
-                      <p className="text-sm text-destructive">{errors.licensePlate}</p>
+                    <Label htmlFor="acceptedSettlement">Have you accepted a settlement for your accident *</Label>
+                    <Select
+                      value={formData.acceptedSettlement}
+                      onValueChange={(value) => handleSelectChange('acceptedSettlement', value)}
+                    >
+                      <SelectTrigger className={errors.acceptedSettlement ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select answer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.acceptedSettlement && (
+                      <p className="text-sm text-destructive">{errors.acceptedSettlement}</p>
                     )}
                   </div>
-                </div>
-              </div>
 
-              {/* Insurance Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Insurance Information (Optional)</h3>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {/* Working With Attorney */}
                   <div className="space-y-2">
-                    <Label htmlFor="insuranceCompany">Insurance Company</Label>
-                    <Input
-                      id="insuranceCompany"
-                      name="insuranceCompany"
-                      value={formData.insuranceCompany}
-                      onChange={handleChange}
-                      placeholder="e.g., State Farm"
-                    />
+                    <Label htmlFor="workingWithAttorney">Are you currently working with an attorney *</Label>
+                    <Select
+                      value={formData.workingWithAttorney}
+                      onValueChange={(value) => handleSelectChange('workingWithAttorney', value)}
+                    >
+                      <SelectTrigger className={errors.workingWithAttorney ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select answer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.workingWithAttorney && (
+                      <p className="text-sm text-destructive">{errors.workingWithAttorney}</p>
+                    )}
                   </div>
 
+                  {/* Location */}
                   <div className="space-y-2">
-                    <Label htmlFor="policyNumber">Policy Number</Label>
-                    <Input
-                      id="policyNumber"
-                      name="policyNumber"
-                      value={formData.policyNumber}
-                      onChange={handleChange}
-                      placeholder="Policy number"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="estimatedDamage">Estimated Damage ($)</Label>
-                    <Input
-                      id="estimatedDamage"
-                      name="estimatedDamage"
-                      value={formData.estimatedDamage}
-                      onChange={handleChange}
-                      placeholder="e.g., 5000"
-                      className={errors.estimatedDamage ? 'border-destructive' : ''}
-                    />
-                    {errors.estimatedDamage && (
-                      <p className="text-sm text-destructive">{errors.estimatedDamage}</p>
+                    <Label htmlFor="location">Location *</Label>
+                    <Select
+                      value={formData.location}
+                      onValueChange={(value) => handleSelectChange('location', value)}
+                    >
+                      <SelectTrigger className={errors.location ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((state) => (
+                          <SelectItem key={state} value={state.toLowerCase().replace(/\s+/g, '_')}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.location && (
+                      <p className="text-sm text-destructive">{errors.location}</p>
                     )}
                   </div>
                 </div>
