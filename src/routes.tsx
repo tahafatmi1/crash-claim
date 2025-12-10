@@ -1,4 +1,7 @@
-import SamplePage from './pages/SamplePage';
+import Home from './pages/Home';
+import FormPage from './pages/FormPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import type { ReactNode } from 'react';
 
 interface RouteConfig {
@@ -10,9 +13,28 @@ interface RouteConfig {
 
 const routes: RouteConfig[] = [
   {
-    name: 'Sample Page',
+    name: 'Home',
     path: '/',
-    element: <SamplePage />
+    element: <Home />,
+    visible: true
+  },
+  {
+    name: 'Submit Claim',
+    path: '/form',
+    element: <FormPage />,
+    visible: true
+  },
+  {
+    name: 'Privacy Policy',
+    path: '/privacy-policy',
+    element: <PrivacyPolicy />,
+    visible: false
+  },
+  {
+    name: 'Terms and Conditions',
+    path: '/terms-and-conditions',
+    element: <TermsAndConditions />,
+    visible: false
   }
 ];
 
