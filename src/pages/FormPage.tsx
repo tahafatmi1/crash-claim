@@ -405,598 +405,866 @@
 // };
 
 // export default TrustedFormReact;
-import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, Shield } from 'lucide-react';
+// import React, { useEffect, useRef, useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { Button } from '@/components/ui/button';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { useToast } from '@/hooks/use-toast';
+// import { Loader2, CheckCircle2, Shield } from 'lucide-react';
 
-declare global {
-  interface Window {
-    xxTrustedForm?: {
-      certUrl?: string;
-      pingUrl?: string;
-    };
-  }
+// declare global {
+//   interface Window {
+//     xxTrustedForm?: {
+//       certUrl?: string;
+//       pingUrl?: string;
+//     };
+//   }
+// }
+
+// interface FormData {
+//   fullName: string;
+//   email: string;
+//   phone: string;
+//   dateOfIncident: string;
+//   accidentSeverity: string;
+//   lastMedicalTreatment: string;
+//   wasYourFault: string;
+//   acceptedSettlement: string;
+//   workingWithAttorney: string;
+//   location: string;
+// }
+
+// const US_STATES = [
+//   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+//   'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+//   'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+//   'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+//   'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+//   'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+//   'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+//   'Wisconsin', 'Wyoming'
+// ];
+
+// const FormPage: React.FC = () => {
+//   const navigate = useNavigate();
+//   const { toast } = useToast();
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [isSuccess, setIsSuccess] = useState(false);
+//   const [trustedFormCertUrl, setTrustedFormCertUrl] = useState('');
+//   const [trustedFormPingUrl, setTrustedFormPingUrl] = useState('');
+//   const certInputRef = useRef<HTMLInputElement | null>(null);
+//   const pingInputRef = useRef<HTMLInputElement | null>(null);
+
+//   const [formData, setFormData] = useState<FormData>({
+//     fullName: '',
+//     email: '',
+//     phone: '',
+//     dateOfIncident: '',
+//     accidentSeverity: '',
+//     lastMedicalTreatment: '',
+//     wasYourFault: '',
+//     acceptedSettlement: '',
+//     workingWithAttorney: '',
+//     location: '',
+//   });
+//   const [errors, setErrors] = useState<Partial<FormData>>({});
+
+//   // === Option B TrustedForm injection & polling (production) ===
+//   useEffect(() => {
+//     // inject script once
+//     if (!document.getElementById('trustedform-js')) {
+//       const tf = document.createElement('script');
+//       tf.id = 'trustedform-js';
+//       tf.type = 'text/javascript';
+//       tf.async = true;
+//       // provide_referrer true gives more metadata, field param tells script which hidden field to fill
+//       tf.src = 'https://api.trustedform.com/trustedform.js?provide_referrer=true&field=xxTrustedFormCertUrl&ping_field=xxTrustedFormPingUrl';
+//       document.head.appendChild(tf);
+//       // Note: do not remove the script on cleanup for SPA stability
+//     }
+
+//     // Poll briefly for the cert URL that the script will set on window.xxTrustedForm.certUrl
+//     const start = Date.now();
+//     const timeoutMs = 5000; // wait up to 5s
+//     const interval = window.setInterval(() => {
+//       const cert = window.xxTrustedForm?.certUrl;
+//       const ping = window.xxTrustedForm?.pingUrl;
+
+//       if (cert) {
+//         setTrustedFormCertUrl(cert);
+//         if (certInputRef.current) certInputRef.current.value = cert;
+//       }
+//       if (ping) {
+//         setTrustedFormPingUrl(ping);
+//         if (pingInputRef.current) pingInputRef.current.value = ping;
+//       }
+
+//       if (cert || Date.now() - start > timeoutMs) {
+//         clearInterval(interval);
+//       }
+//     }, 150);
+
+//     // immediate check in case the script already set it
+//     if (window.xxTrustedForm?.certUrl) {
+//       const immediateCert = window.xxTrustedForm.certUrl;
+//       setTrustedFormCertUrl(immediateCert);
+//       if (certInputRef.current) certInputRef.current.value = immediateCert;
+//     }
+//     if (window.xxTrustedForm?.pingUrl) {
+//       const immediatePing = window.xxTrustedForm.pingUrl;
+//       setTrustedFormPingUrl(immediatePing);
+//       if (pingInputRef.current) pingInputRef.current.value = immediatePing;
+//     }
+
+//     return () => {
+//       clearInterval(interval);
+//       // intentionally not removing the script element
+//     };
+//   }, []);
+
+//   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name as keyof FormData]: value }));
+//     if (errors[name as keyof FormData]) {
+//       setErrors(prev => ({ ...prev, [name as keyof FormData]: '' }));
+//     }
+//   };
+
+//   const handleSelectChange = (name: keyof FormData, value: string) => {
+//     setFormData(prev => ({ ...prev, [name]: value }));
+//     if (errors[name]) {
+//       setErrors(prev => ({ ...prev, [name]: '' }));
+//     }
+//   };
+
+//   const validateForm = (): boolean => {
+//     const newErrors: Partial<FormData> = {};
+
+//     // Full Name validation
+//     if (!formData.fullName.trim()) {
+//       newErrors.fullName = 'Full name is required';
+//     } else if (formData.fullName.trim().length < 2) {
+//       newErrors.fullName = 'Full name must be at least 2 characters';
+//     }
+
+//     // Email validation
+//     if (!formData.email.trim()) {
+//       newErrors.email = 'Email address is required';
+//     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+//       newErrors.email = 'Please enter a valid email address';
+//     }
+
+//     // Phone validation
+//     if (!formData.phone.trim()) {
+//       newErrors.phone = 'Phone number is required';
+//     } else if (!/^[\d\s\-\(\)\+]+$/.test(formData.phone)) {
+//       newErrors.phone = 'Please enter a valid phone number';
+//     }
+
+//     // Date of Incident validation
+//     if (!formData.dateOfIncident) {
+//       newErrors.dateOfIncident = 'Date of incident is required';
+//     } else {
+//       const incidentDate = new Date(formData.dateOfIncident);
+//       const today = new Date();
+//       today.setHours(0, 0, 0, 0);
+//       if (incidentDate > today) {
+//         newErrors.dateOfIncident = 'Date cannot be in the future';
+//       }
+//     }
+
+//     // Accident Severity validation
+//     if (!formData.accidentSeverity) {
+//       newErrors.accidentSeverity = 'Please select accident severity';
+//     }
+
+//     // Last Medical Treatment validation
+//     if (!formData.lastMedicalTreatment) {
+//       newErrors.lastMedicalTreatment = 'Please select when you last received treatment';
+//     }
+
+//     // Was Your Fault validation
+//     if (!formData.wasYourFault) {
+//       newErrors.wasYourFault = 'Please indicate if the accident was your fault';
+//     }
+
+//     // Accepted Settlement validation
+//     if (!formData.acceptedSettlement) {
+//       newErrors.acceptedSettlement = 'Please indicate if you accepted a settlement';
+//     }
+
+//     // Working With Attorney validation
+//     if (!formData.workingWithAttorney) {
+//       newErrors.workingWithAttorney = 'Please indicate if you are working with an attorney';
+//     }
+
+//     // Location validation
+//     if (!formData.location) {
+//       newErrors.location = 'Please select your location';
+//     }
+
+//     setErrors(newErrors);
+//     return Object.keys(newErrors).length === 0;
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+
+//     if (!validateForm()) {
+//       toast({
+//         title: 'Validation Error',
+//         description: 'Please fill in all required fields correctly.',
+//         variant: 'destructive',
+//       });
+//       return;
+//     }
+
+//     setIsSubmitting(true);
+
+//     try {
+//       // Prepare payload to send to your backend
+//       const payload = {
+//         ...formData,
+//         xxTrustedFormCertUrl: trustedFormCertUrl || null,
+//         xxTrustedFormPingUrl: trustedFormPingUrl || null,
+//         submittedAt: new Date().toISOString(),
+//       };
+
+//       // Frontend logging - helpful for testing
+//       console.log('Submitting form with payload:', payload);
+
+//       // Replace '/api/submit-claim' with your actual endpoint
+//       const resp = await fetch('/api/submit-claim', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(payload),
+//       });
+
+//       if (!resp.ok) {
+//         throw new Error('Network response not ok');
+//       }
+
+//       setIsSuccess(true);
+//       toast({
+//         title: 'Success!',
+//         description: 'Your claim has been submitted successfully.',
+//       });
+//     } catch (error) {
+//       console.error('submit error', error);
+//       toast({
+//         title: 'Error',
+//         description: 'Failed to submit claim. Please try again.',
+//         variant: 'destructive',
+//       });
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   if (isSuccess) {
+//     return (
+//       <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
+//         <Card className="max-w-md w-full">
+//           <CardContent className="pt-6">
+//             <div className="text-center space-y-4">
+//               <div className="flex justify-center">
+//                 <CheckCircle2 className="w-16 h-16 text-primary" />
+//               </div>
+//               <h2 className="text-2xl font-bold text-foreground">Claim Submitted!</h2>
+//               <p className="text-muted-foreground">
+//                 Thank you for submitting your crash claim. We have received your information and will review it shortly.
+//               </p>
+//               <p className="text-sm text-muted-foreground">
+//                 You will receive a confirmation email at <strong>{formData.email}</strong>
+//               </p>
+//               <Button onClick={() => navigate('/')} className="w-full">
+//                 Return to Home
+//               </Button>
+//             </div>
+//           </CardContent>
+//         </Card>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-background py-12 px-4">
+//       <div className="max-w-4xl mx-auto">
+//         <div className="text-center mb-8">
+//           <h1 className="text-3xl xl:text-4xl font-bold text-foreground mb-4">
+//             Submit Your Crash Claim
+//           </h1>
+//           <p className="text-lg text-muted-foreground">
+//             Please fill out all required fields accurately
+//           </p>
+//         </div>
+
+//         {/* IP Address Collection Notice */}
+//         <Card className="mb-6 border-primary/20 bg-accent/50">
+//           <CardContent className="pt-6">
+//             <div className="flex items-start gap-3">
+//               <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+//               <div>
+//                 <h3 className="font-semibold text-foreground mb-2">Secure Form Verification</h3>
+//                 <p className="text-sm text-muted-foreground">
+//                   For security and fraud prevention purposes, your IP address will be automatically collected when you submit this form.
+//                   This information is used solely for verification and to ensure the authenticity of your claim submission.
+//                   Your IP address is protected in accordance with our Privacy Policy.
+//                 </p>
+//                 {trustedFormCertUrl && (
+//                   <p className="text-xs text-primary mt-2 font-medium">
+//                     ✓ Trusted Form verification active
+//                   </p>
+//                 )}
+//               </div>
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>Claim Information</CardTitle>
+//             <CardDescription>
+//               All fields marked with * are required
+//             </CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <form onSubmit={handleSubmit} className="space-y-6">
+//               {/* Hidden fields for Trusted Form - uncontrolled so script can set them too */}
+//               <input
+//                 type="hidden"
+//                 name="xxTrustedFormCertUrl"
+//                 ref={certInputRef}
+//                 defaultValue={trustedFormCertUrl}
+//               />
+//               <input
+//                 type="hidden"
+//                 name="xxTrustedFormPingUrl"
+//                 ref={pingInputRef}
+//                 defaultValue={trustedFormPingUrl}
+//               />
+
+//               {/* Personal Information */}
+//               <div className="space-y-4">
+//                 <h3 className="text-lg font-semibold">Personal Information</h3>
+
+//                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+//                   {/* Full Name */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="fullName">Full Name *</Label>
+//                     <Input
+//                       id="fullName"
+//                       name="fullName"
+//                       type="text"
+//                       placeholder="John Doe"
+//                       value={formData.fullName}
+//                       onChange={handleInputChange}
+//                       className={errors.fullName ? 'border-destructive' : ''}
+//                     />
+//                     {errors.fullName && (
+//                       <p className="text-sm text-destructive">{errors.fullName}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Email Address */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="email">Email Address *</Label>
+//                     <Input
+//                       id="email"
+//                       name="email"
+//                       type="email"
+//                       placeholder="john.doe@example.com"
+//                       value={formData.email}
+//                       onChange={handleInputChange}
+//                       className={errors.email ? 'border-destructive' : ''}
+//                     />
+//                     {errors.email && (
+//                       <p className="text-sm text-destructive">{errors.email}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Phone Number */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="phone">Phone Number *</Label>
+//                     <Input
+//                       id="phone"
+//                       name="phone"
+//                       type="tel"
+//                       placeholder="(555) 123-4567"
+//                       value={formData.phone}
+//                       onChange={handleInputChange}
+//                       className={errors.phone ? 'border-destructive' : ''}
+//                     />
+//                     {errors.phone && (
+//                       <p className="text-sm text-destructive">{errors.phone}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Date of Incident */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="dateOfIncident">Date of Incident *</Label>
+//                     <Input
+//                       id="dateOfIncident"
+//                       name="dateOfIncident"
+//                       type="date"
+//                       value={formData.dateOfIncident}
+//                       onChange={handleInputChange}
+//                       max={new Date().toISOString().split('T')[0]}
+//                       className={errors.dateOfIncident ? 'border-destructive' : ''}
+//                     />
+//                     {errors.dateOfIncident && (
+//                       <p className="text-sm text-destructive">{errors.dateOfIncident}</p>
+//                     )}
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Accident Details */}
+//               <div className="space-y-4">
+//                 <h3 className="text-lg font-semibold">Accident Details</h3>
+
+//                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+//                   {/* Accident Severity */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="accidentSeverity">Please select the severity of your accident *</Label>
+//                     <Select
+//                       value={formData.accidentSeverity}
+//                       onValueChange={(value) => handleSelectChange('accidentSeverity', value)}
+//                     >
+//                       <SelectTrigger className={errors.accidentSeverity ? 'border-destructive' : ''}>
+//                         <SelectValue placeholder="Select severity" />
+//                       </SelectTrigger>
+//                       <SelectContent>
+//                         <SelectItem value="major">Major</SelectItem>
+//                         <SelectItem value="moderate">Moderate</SelectItem>
+//                         <SelectItem value="minor">Minor</SelectItem>
+//                       </SelectContent>
+//                     </Select>
+//                     {errors.accidentSeverity && (
+//                       <p className="text-sm text-destructive">{errors.accidentSeverity}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Last Medical Treatment */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="lastMedicalTreatment">When was the last time you received medical treatment *</Label>
+//                     <p className="text-xs text-muted-foreground">(Ambulance, Hospital, ER, Chiropractor, Doctor, etc)</p>
+//                     <Select
+//                       value={formData.lastMedicalTreatment}
+//                       onValueChange={(value) => handleSelectChange('lastMedicalTreatment', value)}
+//                     >
+//                       <SelectTrigger className={errors.lastMedicalTreatment ? 'border-destructive' : ''}>
+//                         <SelectValue placeholder="Select timeframe" />
+//                       </SelectTrigger>
+//                       <SelectContent>
+//                         <SelectItem value="today">Today</SelectItem>
+//                         <SelectItem value="this_week">This Week</SelectItem>
+//                         <SelectItem value="this_month">This Month</SelectItem>
+//                         <SelectItem value="more_than_month">More than a Month Ago</SelectItem>
+//                         <SelectItem value="never">Never Received Treatment</SelectItem>
+//                       </SelectContent>
+//                     </Select>
+//                     {errors.lastMedicalTreatment && (
+//                       <p className="text-sm text-destructive">{errors.lastMedicalTreatment}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Was Your Fault */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="wasYourFault">Was the accident your fault *</Label>
+//                     <Select
+//                       value={formData.wasYourFault}
+//                       onValueChange={(value) => handleSelectChange('wasYourFault', value)}
+//                     >
+//                       <SelectTrigger className={errors.wasYourFault ? 'border-destructive' : ''}>
+//                         <SelectValue placeholder="Select answer" />
+//                       </SelectTrigger>
+//                       <SelectContent>
+//                         <SelectItem value="yes">Yes</SelectItem>
+//                         <SelectItem value="no">No</SelectItem>
+//                         <SelectItem value="not_sure">Not Sure</SelectItem>
+//                       </SelectContent>
+//                     </Select>
+//                     {errors.wasYourFault && (
+//                       <p className="text-sm text-destructive">{errors.wasYourFault}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Accepted Settlement */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="acceptedSettlement">Have you accepted a settlement for your accident *</Label>
+//                     <Select
+//                       value={formData.acceptedSettlement}
+//                       onValueChange={(value) => handleSelectChange('acceptedSettlement', value)}
+//                     >
+//                       <SelectTrigger className={errors.acceptedSettlement ? 'border-destructive' : ''}>
+//                         <SelectValue placeholder="Select answer" />
+//                       </SelectTrigger>
+//                       <SelectContent>
+//                         <SelectItem value="yes">Yes</SelectItem>
+//                         <SelectItem value="no">No</SelectItem>
+//                       </SelectContent>
+//                     </Select>
+//                     {errors.acceptedSettlement && (
+//                       <p className="text-sm text-destructive">{errors.acceptedSettlement}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Working With Attorney */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="workingWithAttorney">Are you currently working with an attorney *</Label>
+//                     <Select
+//                       value={formData.workingWithAttorney}
+//                       onValueChange={(value) => handleSelectChange('workingWithAttorney', value)}
+//                     >
+//                       <SelectTrigger className={errors.workingWithAttorney ? 'border-destructive' : ''}>
+//                         <SelectValue placeholder="Select answer" />
+//                       </SelectTrigger>
+//                       <SelectContent>
+//                         <SelectItem value="yes">Yes</SelectItem>
+//                         <SelectItem value="no">No</SelectItem>
+//                       </SelectContent>
+//                     </Select>
+//                     {errors.workingWithAttorney && (
+//                       <p className="text-sm text-destructive">{errors.workingWithAttorney}</p>
+//                     )}
+//                   </div>
+
+//                   {/* Location */}
+//                   <div className="space-y-2">
+//                     <Label htmlFor="location">Location *</Label>
+//                     <Select
+//                       value={formData.location}
+//                       onValueChange={(value) => handleSelectChange('location', value)}
+//                     >
+//                       <SelectTrigger className={errors.location ? 'border-destructive' : ''}>
+//                         <SelectValue placeholder="Select state" />
+//                       </SelectTrigger>
+//                       <SelectContent>
+//                         {US_STATES.map((state) => (
+//                           <SelectItem key={state} value={state.toLowerCase().replace(/\s+/g, '_')}>
+//                             {state}
+//                           </SelectItem>
+//                         ))}
+//                       </SelectContent>
+//                     </Select>
+//                     {errors.location && (
+//                       <p className="text-sm text-destructive">{errors.location}</p>
+//                     )}
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* TCPA / consent */}
+//               <p className="text-xs text-muted-foreground mt-2">
+//                 By submitting this form, you consent to receive communications regarding your claim,
+//                 including calls or text messages, in accordance with the TCPA (Telephone Consumer Protection Act).
+//               </p>
+
+//               {/* Submit Button */}
+//               <div className="flex flex-col sm:flex-row gap-4 pt-6">
+//                 <Button
+//                   type="submit"
+//                   size="lg"
+//                   className="flex-1"
+//                   disabled={isSubmitting}
+//                 >
+//                   {isSubmitting ? (
+//                     <>
+//                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+//                       Submitting...
+//                     </>
+//                   ) : (
+//                     'Submit Claim'
+//                   )}
+//                 </Button>
+//                 <Button
+//                   type="button"
+//                   variant="outline"
+//                   size="lg"
+//                   onClick={() => navigate('/')}
+//                   disabled={isSubmitting}
+//                 >
+//                   Cancel
+//                 </Button>
+//               </div>
+//             </form>
+//           </CardContent>
+//         </Card>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default FormPage;
+
+
+
+// COMPLETE AND FINAL Form.tsx — WITH AUTO-LOGIC FIELDS
+// Fully integrated, ready to paste into your project
+// Includes: First/Last Name, Injuries, Fault, Address, Summary, Auto‑Derived Logic Fields
+// // 
+import React, { useState, useEffect, useRef } from 'react'
+
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
+
+// --------------------------------------------------
+// INTERFACE
+// --------------------------------------------------
+interface ExtendedFormData {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  dateOfIncident: string
+  accidentSeverity: string
+  lastMedicalTreatment: string
+  wasYourFault: string
+  acceptedSettlement: string
+  workingWithAttorney: string
+  location: string
+
+  summary: string
+  injuries: string
+  address1: string
+  address2: string
+  postalCode: string
+  city: string
+  state: string
+  accidentState: string
+
+  occurred_within_30_days: string
+  occurred_31_to_60_days: string
+  occurred_61_to_90_days: string
+  occurred_3_to_6_months: string
+  occurred_6_to_9_months: string
+  occurred_9_to_12_months: string
+
+  has_physical_injuries: string
+  had_medical_treatment_within_14_days_of_accident: string
+  medical_documentation_confirms_treatment_timing_continuity_from_lead_submission: string
+  has_ongoing_medical_treatment_once_a_month_at_least: string
+  medical_report_available_or_can_be_obtained_on_request: string
+  was_not_at_fault: string
+  has_no_current_attorney: string
+  has_not_been_dropped: string
+  has_not_settled: string
+  has_insurance_or_uninsured_motorist_coverage: string
+  has_police_investigated: string
+  police_report_confirms_accident_and_date: string
+  police_report_available_or_can_be_obtained_on_request: string
 }
 
-interface FormData {
-  fullName: string;
-  email: string;
-  phone: string;
-  dateOfIncident: string;
-  accidentSeverity: string;
-  lastMedicalTreatment: string;
-  wasYourFault: string;
-  acceptedSettlement: string;
-  workingWithAttorney: string;
-  location: string;
+// --------------------------------------------------
+// DEFAULT FORM
+// --------------------------------------------------
+const defaultForm: ExtendedFormData = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  dateOfIncident: '',
+  accidentSeverity: '',
+  lastMedicalTreatment: '',
+  wasYourFault: '',
+  acceptedSettlement: '',
+  workingWithAttorney: '',
+  location: '',
+
+  summary: '',
+  injuries: '',
+  address1: '',
+  address2: '',
+  postalCode: '',
+  city: '',
+  state: '',
+  accidentState: '',
+
+  occurred_within_30_days: 'false',
+  occurred_31_to_60_days: 'false',
+  occurred_61_to_90_days: 'false',
+  occurred_3_to_6_months: 'false',
+  occurred_6_to_9_months: 'false',
+  occurred_9_to_12_months: 'false',
+
+  has_physical_injuries: 'false',
+  had_medical_treatment_within_14_days_of_accident: 'false',
+  medical_documentation_confirms_treatment_timing_continuity_from_lead_submission: 'false',
+  has_ongoing_medical_treatment_once_a_month_at_least: 'false',
+  medical_report_available_or_can_be_obtained_on_request: 'false',
+  was_not_at_fault: 'false',
+  has_no_current_attorney: 'false',
+  has_not_been_dropped: 'false',
+  has_not_settled: 'false',
+  has_insurance_or_uninsured_motorist_coverage: 'false',
+  has_police_investigated: 'false',
+  police_report_confirms_accident_and_date: 'false',
+  police_report_available_or_can_be_obtained_on_request: 'false',
 }
 
-const US_STATES = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
-  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
-  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
-  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
-  'Wisconsin', 'Wyoming'
-];
+// --------------------------------------------------
+// COMPONENT
+// --------------------------------------------------
+export default function FormPage() {
+  const [formData, setFormData] = useState(defaultForm)
 
-const FormPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [trustedFormCertUrl, setTrustedFormCertUrl] = useState('');
-  const [trustedFormPingUrl, setTrustedFormPingUrl] = useState('');
-  const certInputRef = useRef<HTMLInputElement | null>(null);
-  const pingInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [formData, setFormData] = useState<FormData>({
-    fullName: '',
-    email: '',
-    phone: '',
-    dateOfIncident: '',
-    accidentSeverity: '',
-    lastMedicalTreatment: '',
-    wasYourFault: '',
-    acceptedSettlement: '',
-    workingWithAttorney: '',
-    location: '',
-  });
-  const [errors, setErrors] = useState<Partial<FormData>>({});
-
-  // === Option B TrustedForm injection & polling (production) ===
-  useEffect(() => {
-    // inject script once
-    if (!document.getElementById('trustedform-js')) {
-      const tf = document.createElement('script');
-      tf.id = 'trustedform-js';
-      tf.type = 'text/javascript';
-      tf.async = true;
-      // provide_referrer true gives more metadata, field param tells script which hidden field to fill
-      tf.src = 'https://api.trustedform.com/trustedform.js?provide_referrer=true&field=xxTrustedFormCertUrl&ping_field=xxTrustedFormPingUrl';
-      document.head.appendChild(tf);
-      // Note: do not remove the script on cleanup for SPA stability
-    }
-
-    // Poll briefly for the cert URL that the script will set on window.xxTrustedForm.certUrl
-    const start = Date.now();
-    const timeoutMs = 5000; // wait up to 5s
-    const interval = window.setInterval(() => {
-      const cert = window.xxTrustedForm?.certUrl;
-      const ping = window.xxTrustedForm?.pingUrl;
-
-      if (cert) {
-        setTrustedFormCertUrl(cert);
-        if (certInputRef.current) certInputRef.current.value = cert;
-      }
-      if (ping) {
-        setTrustedFormPingUrl(ping);
-        if (pingInputRef.current) pingInputRef.current.value = ping;
-      }
-
-      if (cert || Date.now() - start > timeoutMs) {
-        clearInterval(interval);
-      }
-    }, 150);
-
-    // immediate check in case the script already set it
-    if (window.xxTrustedForm?.certUrl) {
-      const immediateCert = window.xxTrustedForm.certUrl;
-      setTrustedFormCertUrl(immediateCert);
-      if (certInputRef.current) certInputRef.current.value = immediateCert;
-    }
-    if (window.xxTrustedForm?.pingUrl) {
-      const immediatePing = window.xxTrustedForm.pingUrl;
-      setTrustedFormPingUrl(immediatePing);
-      if (pingInputRef.current) pingInputRef.current.value = immediatePing;
-    }
-
-    return () => {
-      clearInterval(interval);
-      // intentionally not removing the script element
-    };
-  }, []);
+  const certInputRef = useRef<HTMLInputElement | null>(null)
+  const pingInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name as keyof FormData]: value }));
-    if (errors[name as keyof FormData]) {
-      setErrors(prev => ({ ...prev, [name as keyof FormData]: '' }));
-    }
-  };
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
-  const handleSelectChange = (name: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value })
+  }
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
+  // -----------------------------
+  // Auto-derived logic
+  // -----------------------------
+  useEffect(() => {
+    if (!formData.dateOfIncident) return
+    const today = new Date()
+    const incident = new Date(formData.dateOfIncident)
+    const diffDays = Math.floor((today.getTime() - incident.getTime()) / (1000 * 3600 * 24))
+    const updated = { ...formData }
+    updated.occurred_within_30_days = (diffDays <= 30).toString()
+    updated.occurred_31_to_60_days = (diffDays > 30 && diffDays <= 60).toString()
+    updated.occurred_61_to_90_days = (diffDays > 60 && diffDays <= 90).toString()
+    updated.occurred_3_to_6_months = (diffDays > 90 && diffDays <= 180).toString()
+    updated.occurred_6_to_9_months = (diffDays > 180 && diffDays <= 270).toString()
+    updated.occurred_9_to_12_months = (diffDays > 270 && diffDays <= 365).toString()
+    setFormData(updated)
+  }, [formData.dateOfIncident])
 
-    // Full Name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = 'Full name must be at least 2 characters';
-    }
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, has_physical_injuries: (prev.injuries !== 'none' && prev.injuries !== '').toString() }))
+  }, [formData.injuries])
 
-    // Email validation
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, was_not_at_fault: (prev.wasYourFault === 'no').toString() }))
+  }, [formData.wasYourFault])
 
-    // Phone validation
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[\d\s\-\(\)\+]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
-    }
-
-    // Date of Incident validation
-    if (!formData.dateOfIncident) {
-      newErrors.dateOfIncident = 'Date of incident is required';
-    } else {
-      const incidentDate = new Date(formData.dateOfIncident);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (incidentDate > today) {
-        newErrors.dateOfIncident = 'Date cannot be in the future';
+  // -----------------------------
+  // TrustedForm polling (hidden inputs)
+  // -----------------------------
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if ((window as any).xxTrustedForm?.certUrl && certInputRef.current) {
+        certInputRef.current.value = (window as any).xxTrustedForm.certUrl
       }
-    }
-
-    // Accident Severity validation
-    if (!formData.accidentSeverity) {
-      newErrors.accidentSeverity = 'Please select accident severity';
-    }
-
-    // Last Medical Treatment validation
-    if (!formData.lastMedicalTreatment) {
-      newErrors.lastMedicalTreatment = 'Please select when you last received treatment';
-    }
-
-    // Was Your Fault validation
-    if (!formData.wasYourFault) {
-      newErrors.wasYourFault = 'Please indicate if the accident was your fault';
-    }
-
-    // Accepted Settlement validation
-    if (!formData.acceptedSettlement) {
-      newErrors.acceptedSettlement = 'Please indicate if you accepted a settlement';
-    }
-
-    // Working With Attorney validation
-    if (!formData.workingWithAttorney) {
-      newErrors.workingWithAttorney = 'Please indicate if you are working with an attorney';
-    }
-
-    // Location validation
-    if (!formData.location) {
-      newErrors.location = 'Please select your location';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields correctly.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Prepare payload to send to your backend
-      const payload = {
-        ...formData,
-        xxTrustedFormCertUrl: trustedFormCertUrl || null,
-        xxTrustedFormPingUrl: trustedFormPingUrl || null,
-        submittedAt: new Date().toISOString(),
-      };
-
-      // Frontend logging - helpful for testing
-      console.log('Submitting form with payload:', payload);
-
-      // Replace '/api/submit-claim' with your actual endpoint
-      const resp = await fetch('/api/submit-claim', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!resp.ok) {
-        throw new Error('Network response not ok');
+      if ((window as any).xxTrustedForm?.pingUrl && pingInputRef.current) {
+        pingInputRef.current.value = (window as any).xxTrustedForm.pingUrl
       }
+    }, 150)
 
-      setIsSuccess(true);
-      toast({
-        title: 'Success!',
-        description: 'Your claim has been submitted successfully.',
-      });
-    } catch (error) {
-      console.error('submit error', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit claim. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+    const timeout = setTimeout(() => clearInterval(interval), 5000)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
     }
-  };
+  }, [])
 
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <CheckCircle2 className="w-16 h-16 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Claim Submitted!</h2>
-              <p className="text-muted-foreground">
-                Thank you for submitting your crash claim. We have received your information and will review it shortly.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                You will receive a confirmation email at <strong>{formData.email}</strong>
-              </p>
-              <Button onClick={() => navigate('/')} className="w-full">
-                Return to Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  // -----------------------------
+  // Submit handler
+  // -----------------------------
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Form submitted:', formData)
+    console.log('TrustedForm Cert URL:', certInputRef.current?.value)
+    console.log('TrustedForm Ping URL:', pingInputRef.current?.value)
+    // send formData + trustedform URLs to backend
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl xl:text-4xl font-bold text-foreground mb-4">
-            Submit Your Crash Claim
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Please fill out all required fields accurately
-          </p>
+    <form onSubmit={handleSubmit} className="space-y-10 p-6 max-w-3xl mx-auto">
+      {/* TrustedForm hidden fields */}
+      <input type="hidden" name="xxTrustedFormCertUrl" ref={certInputRef} />
+      <input type="hidden" name="xxTrustedFormPingUrl" ref={pingInputRef} />
+
+      {/* PERSONAL DETAILS */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Personal Details</h2>
+        <div className="space-y-2">
+          <Label>First Name *</Label>
+          <Input name="firstName" value={formData.firstName} onChange={handleInputChange} />
+        </div>
+        <div className="space-y-2">
+          <Label>Last Name *</Label>
+          <Input name="lastName" value={formData.lastName} onChange={handleInputChange} />
+        </div>
+        <div className="space-y-2">
+          <Label>Email *</Label>
+          <Input name="email" type="email" value={formData.email} onChange={handleInputChange} />
+        </div>
+        <div className="space-y-2">
+          <Label>Phone *</Label>
+          <Input name="phone" value={formData.phone} onChange={handleInputChange} />
+        </div>
+      </div>
+
+      {/* ACCIDENT DETAILS */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Accident Details</h2>
+        <div className="space-y-2">
+          <Label>Accident Summary *</Label>
+          <Input name="summary" value={formData.summary} onChange={handleInputChange} />
         </div>
 
-        {/* IP Address Collection Notice */}
-        <Card className="mb-6 border-primary/20 bg-accent/50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">Secure Form Verification</h3>
-                <p className="text-sm text-muted-foreground">
-                  For security and fraud prevention purposes, your IP address will be automatically collected when you submit this form.
-                  This information is used solely for verification and to ensure the authenticity of your claim submission.
-                  Your IP address is protected in accordance with our Privacy Policy.
-                </p>
-                {trustedFormCertUrl && (
-                  <p className="text-xs text-primary mt-2 font-medium">
-                    ✓ Trusted Form verification active
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          <Label>Injuries Sustained *</Label>
+          <Select value={formData.injuries} onValueChange={(v) => handleSelectChange('injuries', v)}>
+            <SelectTrigger><SelectValue placeholder="Select injury severity" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="minor">Minor Injury (Cuts, scrapes, bruises)</SelectItem>
+              <SelectItem value="mild">Mild Injury (Soreness, aches, pains)</SelectItem>
+              <SelectItem value="moderate">Moderate Injury (Broken bones, dislocations)</SelectItem>
+              <SelectItem value="severe">Severe Injury (Extensive treatment or surgery)</SelectItem>
+              <SelectItem value="none">None</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Claim Information</CardTitle>
-            <CardDescription>
-              All fields marked with * are required
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Hidden fields for Trusted Form - uncontrolled so script can set them too */}
-              <input
-                type="hidden"
-                name="xxTrustedFormCertUrl"
-                ref={certInputRef}
-                defaultValue={trustedFormCertUrl}
-              />
-              <input
-                type="hidden"
-                name="xxTrustedFormPingUrl"
-                ref={pingInputRef}
-                defaultValue={trustedFormPingUrl}
-              />
+        <div className="space-y-2">
+          <Label>Was the accident your fault?</Label>
+          <Select value={formData.wasYourFault} onValueChange={(v) => handleSelectChange('wasYourFault', v)}>
+            <SelectTrigger><SelectValue placeholder="Select one" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yes">Yes</SelectItem>
+              <SelectItem value="no">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Personal Information</h3>
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {/* Full Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name *</Label>
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      className={errors.fullName ? 'border-destructive' : ''}
-                    />
-                    {errors.fullName && (
-                      <p className="text-sm text-destructive">{errors.fullName}</p>
-                    )}
-                  </div>
-
-                  {/* Email Address */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="john.doe@example.com"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className={errors.email ? 'border-destructive' : ''}
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-                  </div>
-
-                  {/* Phone Number */}
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      placeholder="(555) 123-4567"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className={errors.phone ? 'border-destructive' : ''}
-                    />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone}</p>
-                    )}
-                  </div>
-
-                  {/* Date of Incident */}
-                  <div className="space-y-2">
-                    <Label htmlFor="dateOfIncident">Date of Incident *</Label>
-                    <Input
-                      id="dateOfIncident"
-                      name="dateOfIncident"
-                      type="date"
-                      value={formData.dateOfIncident}
-                      onChange={handleInputChange}
-                      max={new Date().toISOString().split('T')[0]}
-                      className={errors.dateOfIncident ? 'border-destructive' : ''}
-                    />
-                    {errors.dateOfIncident && (
-                      <p className="text-sm text-destructive">{errors.dateOfIncident}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Accident Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Accident Details</h3>
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {/* Accident Severity */}
-                  <div className="space-y-2">
-                    <Label htmlFor="accidentSeverity">Please select the severity of your accident *</Label>
-                    <Select
-                      value={formData.accidentSeverity}
-                      onValueChange={(value) => handleSelectChange('accidentSeverity', value)}
-                    >
-                      <SelectTrigger className={errors.accidentSeverity ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select severity" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="major">Major</SelectItem>
-                        <SelectItem value="moderate">Moderate</SelectItem>
-                        <SelectItem value="minor">Minor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.accidentSeverity && (
-                      <p className="text-sm text-destructive">{errors.accidentSeverity}</p>
-                    )}
-                  </div>
-
-                  {/* Last Medical Treatment */}
-                  <div className="space-y-2">
-                    <Label htmlFor="lastMedicalTreatment">When was the last time you received medical treatment *</Label>
-                    <p className="text-xs text-muted-foreground">(Ambulance, Hospital, ER, Chiropractor, Doctor, etc)</p>
-                    <Select
-                      value={formData.lastMedicalTreatment}
-                      onValueChange={(value) => handleSelectChange('lastMedicalTreatment', value)}
-                    >
-                      <SelectTrigger className={errors.lastMedicalTreatment ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select timeframe" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="this_week">This Week</SelectItem>
-                        <SelectItem value="this_month">This Month</SelectItem>
-                        <SelectItem value="more_than_month">More than a Month Ago</SelectItem>
-                        <SelectItem value="never">Never Received Treatment</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.lastMedicalTreatment && (
-                      <p className="text-sm text-destructive">{errors.lastMedicalTreatment}</p>
-                    )}
-                  </div>
-
-                  {/* Was Your Fault */}
-                  <div className="space-y-2">
-                    <Label htmlFor="wasYourFault">Was the accident your fault *</Label>
-                    <Select
-                      value={formData.wasYourFault}
-                      onValueChange={(value) => handleSelectChange('wasYourFault', value)}
-                    >
-                      <SelectTrigger className={errors.wasYourFault ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select answer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes">Yes</SelectItem>
-                        <SelectItem value="no">No</SelectItem>
-                        <SelectItem value="not_sure">Not Sure</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.wasYourFault && (
-                      <p className="text-sm text-destructive">{errors.wasYourFault}</p>
-                    )}
-                  </div>
-
-                  {/* Accepted Settlement */}
-                  <div className="space-y-2">
-                    <Label htmlFor="acceptedSettlement">Have you accepted a settlement for your accident *</Label>
-                    <Select
-                      value={formData.acceptedSettlement}
-                      onValueChange={(value) => handleSelectChange('acceptedSettlement', value)}
-                    >
-                      <SelectTrigger className={errors.acceptedSettlement ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select answer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes">Yes</SelectItem>
-                        <SelectItem value="no">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.acceptedSettlement && (
-                      <p className="text-sm text-destructive">{errors.acceptedSettlement}</p>
-                    )}
-                  </div>
-
-                  {/* Working With Attorney */}
-                  <div className="space-y-2">
-                    <Label htmlFor="workingWithAttorney">Are you currently working with an attorney *</Label>
-                    <Select
-                      value={formData.workingWithAttorney}
-                      onValueChange={(value) => handleSelectChange('workingWithAttorney', value)}
-                    >
-                      <SelectTrigger className={errors.workingWithAttorney ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select answer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes">Yes</SelectItem>
-                        <SelectItem value="no">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.workingWithAttorney && (
-                      <p className="text-sm text-destructive">{errors.workingWithAttorney}</p>
-                    )}
-                  </div>
-
-                  {/* Location */}
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location *</Label>
-                    <Select
-                      value={formData.location}
-                      onValueChange={(value) => handleSelectChange('location', value)}
-                    >
-                      <SelectTrigger className={errors.location ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map((state) => (
-                          <SelectItem key={state} value={state.toLowerCase().replace(/\s+/g, '_')}>
-                            {state}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.location && (
-                      <p className="text-sm text-destructive">{errors.location}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* TCPA / consent */}
-              <p className="text-xs text-muted-foreground mt-2">
-                By submitting this form, you consent to receive communications regarding your claim,
-                including calls or text messages, in accordance with the TCPA (Telephone Consumer Protection Act).
-              </p>
-
-              {/* Submit Button */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="flex-1"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit Claim'
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  onClick={() => navigate('/')}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          <Label>Date of Incident *</Label>
+          <Input type="date" name="dateOfIncident" value={formData.dateOfIncident} onChange={handleInputChange} />
+        </div>
       </div>
-    </div>
-  );
-};
 
-export default FormPage;
+      {/* ADDRESS */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Address</h2>
+        <Input name="address1" value={formData.address1} onChange={handleInputChange} placeholder="Address Line 1" />
+        <Input name="address2" value={formData.address2} onChange={handleInputChange} placeholder="Address Line 2" />
+        <Input name="city" value={formData.city} onChange={handleInputChange} placeholder="City" />
+        <Input name="state" value={formData.state} onChange={handleInputChange} placeholder="State" />
+        <Input name="postalCode" value={formData.postalCode} onChange={handleInputChange} placeholder="Postal Code" />
+      </div>
+
+      <Button type="submit" className="w-full">Submit</Button>
+    </form>
+  )
+}
