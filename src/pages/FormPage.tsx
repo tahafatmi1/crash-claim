@@ -161,8 +161,6 @@
 //     </form>
 //   )
 // }
-
-
 import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -208,7 +206,8 @@ export default function FormPage() {
   const [formData, setFormData] = useState(defaultForm)
   const [consentChecked, setConsentChecked] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState("")
+  const [successMsg, setSuccessMsg] = useState("")
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -225,113 +224,101 @@ export default function FormPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
+    e.preventDefault()
 
-  const certInput = document.querySelector(
-    'input[name="xxTrustedFormCertUrl"]'
-  ) as HTMLInputElement | null
+    setErrorMsg("")
+    setSuccessMsg("")
+    setLoading(true)
 
-  const trustedform_cert_url = certInput?.value || ""
+    const certInput = document.querySelector(
+      'input[name="xxTrustedFormCertUrl"]'
+    ) as HTMLInputElement | null
 
-  try {
-    const res = await fetch("/api/submit-lead", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...formData,
-        trustedform_cert_url,
-      }),
-    })
+    const trustedform_cert_url = certInput?.value || ""
 
-    const data = await res.json()
+    try {
+      const res = await fetch("/api/submit-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          trustedform_cert_url,
+        }),
+      })
 
-    if (!res.ok) {
-      throw new Error(data?.error || "Submission failed")
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Submission failed")
+      }
+
+      setSuccessMsg("✅ Your claim has been submitted successfully.")
+
+      // Redirect after short delay
+      setTimeout(() => {
+        navigate("/thank-you")
+      }, 2000)
+
+    } catch (err: any) {
+      setErrorMsg(err.message || "❌ Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
     }
-
-    // ✅ SUCCESS REDIRECT
-    window.location.href = "/thank-you"
-
-  } catch (err: any) {
-    alert(err.message || "Something went wrong. Please try again.")
   }
-}
-
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-3xl mx-auto px-6 py-4"
-    >
+    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-6 py-4">
+
+      {/* Success Message */}
+      {successMsg && (
+        <div className="mb-4 rounded-lg bg-green-100 text-green-800 px-4 py-3 text-sm">
+          {successMsg}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMsg && (
+        <div className="mb-4 rounded-lg bg-red-100 text-red-800 px-4 py-3 text-sm">
+          {errorMsg}
+        </div>
+      )}
+
       {/* Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
         <div className="space-y-1.5">
           <Label>First Name</Label>
-          <Input
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleInputChange}
-            required
-          />
+          <Input name="firstName" value={formData.firstName} onChange={handleInputChange} required />
         </div>
 
         <div className="space-y-1.5">
           <Label>Last Name</Label>
-          <Input
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleInputChange}
-            required
-          />
+          <Input name="lastName" value={formData.lastName} onChange={handleInputChange} required />
         </div>
 
         <div className="space-y-1.5">
           <Label>Email</Label>
-          <Input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            required
-          />
+          <Input type="email" name="email" value={formData.email} onChange={handleInputChange} required />
         </div>
 
         <div className="space-y-1.5">
           <Label>Phone</Label>
-          <Input
-            name="phone"
-            value={formData.phone}
-            onChange={handleInputChange}
-            required
-          />
+          <Input name="phone" value={formData.phone} onChange={handleInputChange} required />
         </div>
 
         <div className="space-y-1.5">
           <Label>Zip Code</Label>
-          <Input
-            name="postalCode"
-            value={formData.postalCode}
-            onChange={handleInputChange}
-            required
-          />
+          <Input name="postalCode" value={formData.postalCode} onChange={handleInputChange} required />
         </div>
 
         <div className="space-y-1.5">
           <Label>State</Label>
-          <Select
-            value={formData.state}
-            onValueChange={(v) => handleSelectChange("state", v)}
-          >
+          <Select value={formData.state} onValueChange={(v) => handleSelectChange("state", v)}>
             <SelectTrigger>
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
               {US_STATES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
+                <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -349,18 +336,9 @@ export default function FormPage() {
         />
         <Label className="text-sm leading-snug">
           By submitting, you agree to Crash Claim's Terms & Conditions and Privacy Policy.
-          Also you acknowledge that you meet the eligibility requirements which includes
-          timeframe, injuries nature, not-at-fault status, police/medical verification as per need,
-          no current attorney, not settled/dropped before, and SMS consent.
+          You also acknowledge eligibility requirements and SMS consent.
         </Label>
       </div>
-
-      {/* Error */}
-      {error && (
-        <p className="text-sm text-red-600 mt-4">
-          {error}
-        </p>
-      )}
 
       {/* Submit */}
       <Button
