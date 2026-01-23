@@ -335,8 +335,7 @@ export default function FormPage() {
           className="mt-1"
         />
         <Label className="text-sm leading-snug">
-          By submitting, you agree to Crash Claim's Terms & Conditions and Privacy Policy.
-          You also acknowledge eligibility requirements and SMS consent.
+         By submitting, you agree to Crash Claim's Terms & Conditions and Privacy Policy. Also you acknowledge that you meet the eligibility requirements which includes timeframe, injuries nature, not-at-fault status, police/medical verification as per need, no current attorney, not settled/dropped before, and SMS consent.      
         </Label>
       </div>
 
