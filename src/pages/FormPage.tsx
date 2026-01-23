@@ -225,39 +225,40 @@ export default function FormPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  e.preventDefault()
 
-    try {
-      const trustedFormInput = document.querySelector(
-        'input[name="trustedform_cert_url"]'
-      ) as HTMLInputElement | null
+  const certInput = document.querySelector(
+    'input[name="xxTrustedFormCertUrl"]'
+  ) as HTMLInputElement | null
 
-      const trustedform_cert_url = trustedFormInput?.value
+  const trustedform_cert_url = certInput?.value || ""
 
-      const response = await fetch("/api/submit-lead", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          trustedform_cert_url,
-        }),
-      })
+  try {
+    const res = await fetch("/api/submit-lead", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...formData,
+        trustedform_cert_url,
+      }),
+    })
 
-      if (!response.ok) {
-        throw new Error("Submission failed")
-      }
+    const data = await res.json()
 
-      navigate("/success")
-    } catch (err) {
-      setError("Something went wrong. Please try again.")
-    } finally {
-      setLoading(false)
+    if (!res.ok) {
+      throw new Error(data?.error || "Submission failed")
     }
+
+    // ✅ SUCCESS REDIRECT
+    window.location.href = "/thank-you"
+
+  } catch (err: any) {
+    alert(err.message || "Something went wrong. Please try again.")
   }
+}
+
 
   return (
     <form
